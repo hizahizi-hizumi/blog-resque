@@ -1,0 +1,29 @@
+x-db-env: &db-env
+  MYSQL_ROOT_PASSWORD: root
+
+services:
+  web:
+    build: ./docker/web
+    command: sh -c "rm -f tmp/pids/server.pid && bundle exec rails s -b '0.0.0.0'"
+    ports:
+      - ${RAILS_PORT:-3000}:3000
+    volumes:
+      - bundle_vol:/usr/local/bundle
+      - ./web:/app
+      - ./docker/web/entrypoint.sh:/entrypoint.sh
+    depends_on:
+      - db
+    environment:
+      <<: *db-env
+      DB_HOST: db
+  db:
+    build: ./docker/db
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - db_vol:/var/lib/mysql
+    environment:
+      <<: *db-env
+
+volumes:
+  bundle_vol:
+  db_vol:
